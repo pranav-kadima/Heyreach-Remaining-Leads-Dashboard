@@ -339,8 +339,18 @@ td:last-child { border-right: none; }
 .num-est  { font-style: italic; opacity: 0.75; }
 .num-nil  { color: var(--t3); font-size: 11px; }
 
-/* Sender column filter */
+/* Sender badges */
 .td-sender { white-space: nowrap; }
+.sender-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 5px;
+  margin: 1px 2px 1px 0;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
 .col-filter-btn {
   background: none;
   border: none;
@@ -726,6 +736,23 @@ td:last-child { border-right: none; }
 <script>
 const DATA = [];
 
+const SENDER_COLORS = [
+  '#4a7fc1', // blue
+  '#9b4a4a', // terracotta
+  '#4a8a5d', // green
+  '#7a5a9b', // purple
+  '#8a6a4a', // brown
+  '#4a8a8a', // teal
+  '#9b6a3a', // orange
+  '#5a7a4a', // olive
+];
+
+function senderColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return SENDER_COLORS[hash % SENDER_COLORS.length];
+}
+
 const STATUS_ORDER = { IN_PROGRESS:0, PAUSED:1, FINISHED:2, DRAFT:3, CANCELED:4 };
 const BADGE_CLS    = { IN_PROGRESS:'b-run', PAUSED:'b-pause', FINISHED:'b-fin', DRAFT:'b-draft', CANCELED:'b-fail' };
 const BADGE_LABEL  = { IN_PROGRESS:'Active', PAUSED:'Paused', FINISHED:'Finished', DRAFT:'Draft', CANCELED:'Canceled' };
@@ -825,7 +852,10 @@ function renderTable() {
     const bl = BADGE_LABEL[row.status] || row.status;
 
     const senderDisp = row.senders?.length
-      ? row.senders.map(s => s.split(' ')[0]).join(', ')
+      ? row.senders.map(s => {
+          const first = s.split(' ')[0];
+          return `<span class="sender-badge" style="background:${senderColor(s)}">${first}</span>`;
+        }).join('')
       : `<span class="num-nil">—</span>`;
 
     const connDisp = row.connCheck === null
@@ -849,7 +879,7 @@ function renderTable() {
         <span class="camp-id">#${row.id}</span>
       </td>
       <td><span class="badge ${bc}"><span class="bdot"></span>${bl}</span></td>
-      <td class="td-sender" style="font-size:12px;color:var(--t2)">${senderDisp}</td>
+      <td class="td-sender">${senderDisp}</td>
       <td class="num-cell"><span class="num-big">${row.total.toLocaleString()}</span></td>
       <td class="num-cell"><span class="num-big" style="color:var(--t2)">${analyticsCount.toLocaleString()}</span></td>
       <td class="num-cell"><span class="num-big num-pend">${row.pending.toLocaleString()}</span></td>
@@ -990,7 +1020,7 @@ renderTable();
    WORKSPACE / API KEY MANAGEMENT
    ══════════════════════════════════════════════ */
 // Calls go to local proxy (/heyreach-api/*) which forwards to HeyReach — avoids CORS.
-const HR_API = '/api';
+const HR_API = '/heyreach-api';
 const DEMO_ID = '__demo__';
 
 let workspaces = JSON.parse(localStorage.getItem('hr_workspaces') || '[]');
