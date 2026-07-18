@@ -639,6 +639,31 @@ td:last-child { border-right: none; }
   font-size: 10px; color: var(--t3); margin-top: 2px;
 }
 .lead-count strong { color: var(--accent); }
+
+/* ── Totals footer row ── */
+tfoot tr {
+  border-top: 2px solid var(--brd);
+  background: var(--surf2);
+}
+tfoot td {
+  padding: 11px 10px;
+  vertical-align: middle;
+  border-right: 1px solid var(--brd);
+}
+tfoot td:last-child { border-right: none; }
+.tfoot-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.tfoot-remaining {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
 </style>
 </head>
 <body>
@@ -726,6 +751,7 @@ td:last-child { border-right: none; }
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
+      <tfoot id="tfoot"></tfoot>
     </table>
   </div>
 </div>
@@ -846,6 +872,30 @@ function renderTable() {
     }
     return (b[sortKey] - a[sortKey]) * (sortAsc?-1:1);
   });
+
+  // Compute totals over the visible sorted rows
+  let tTotal = 0, tAnalytics = 0, tPending = 0, tConn = 0, tRemaining = 0;
+  let anyConn = false;
+  for (const row of sorted) {
+    const analyticsCount = row.leadCount ?? row.total;
+    tTotal     += row.total;
+    tAnalytics += analyticsCount;
+    tPending   += row.pending;
+    if (row.connCheck !== null) { tConn += row.connCheck; anyConn = true; }
+    if (row.connCheck !== null) {
+      tRemaining += (row.total - analyticsCount) + row.pending + row.connCheck;
+    }
+  }
+  document.getElementById('tfoot').innerHTML = sorted.length === 0 ? '' : `<tr>
+    <td class="tfoot-label">Total (${sorted.length} campaign${sorted.length === 1 ? '' : 's'})</td>
+    <td></td>
+    <td></td>
+    <td class="num-cell"><span class="num-big">${tTotal.toLocaleString()}</span></td>
+    <td class="num-cell"><span class="num-big" style="color:var(--t2)">${tAnalytics.toLocaleString()}</span></td>
+    <td class="num-cell"><span class="num-big num-pend">${tPending.toLocaleString()}</span></td>
+    <td class="num-cell">${anyConn ? `<span class="num-big num-conn">${tConn.toLocaleString()}</span>` : `<span class="num-nil">—</span>`}</td>
+    <td class="num-cell"><span class="tfoot-remaining">${anyConn ? tRemaining.toLocaleString() : '—'}</span></td>
+  </tr>`;
 
   document.getElementById('tbody').innerHTML = sorted.map(row => {
     const bc = BADGE_CLS[row.status] || 'b-draft';
