@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeyReach — Campaign Dashboard</title>
+<style>
+/* ── Design tokens ── */
+:root {
+  --bg:        #191919;
+  --surf:      #252525;
+  --surf2:     #2f2f2f;
+  --brd:       rgba(255,255,255,0.08);
+  --t1:        #ffffff;
+  --t2:        #9b9b9b;
+  --t3:        #5a5a5a;
+  --accent:    #5b8dee;
+  --a-bg:      rgba(91,141,238,0.12);
+  --c-run:     #5b8dee;
+  --c-pause:   #d9a84e;
+  --c-fin:     #4ea676;
+  --c-draft:   #6b6b6b;
+  --c-fail:    #d96b64;
+  --c-conn:    #a882e0;
+  --bar-bg:    rgba(255,255,255,0.08);
+  --row-hover: rgba(255,255,255,0.03);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--t1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+  padding-bottom: 56px;
+}
+
+/* ── Header ── */
+.hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px 0;
+  gap: 12px;
+}
+.hdr-left { display: flex; align-items: center; gap: 10px; }
+.hdr-logo {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  background: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff; letter-spacing: -0.03em;
+  flex-shrink: 0;
+}
+.hdr-title { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+.hdr-sub { font-size: 11px; color: var(--t3); margin-top: 1px; }
+.hdr-right { font-size: 11px; color: var(--t3); text-align: right; }
+.live-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--c-fin);
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* ── KPI row ── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  padding: 18px 28px;
+}
+.kpi {
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: 9px;
+  padding: 14px 16px 13px;
+}
+.kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 7px;
+}
+.kpi-num {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.kpi-sub {
+  font-size: 10px;
+  color: var(--t3);
+  margin-top: 4px;
+}
+.k-run  { color: #ffffff; }
+.k-paus { color: #ffffff; }
+.k-fin  { color: #ffffff; }
+.k-fail { color: #ffffff; }
+.k-tot  { color: #ffffff; }
+.k-conn { color: #ffffff; }
+
+/* ── Filter tabs ── */
+.filters {
+  display: flex;
+  gap: 2px;
+  padding: 0 28px 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t3);
+  padding: 5px 12px;
+  border-radius: 6px;
+  transition: background 0.1s, color 0.1s;
+}
+.filter-btn:hover { background: var(--surf2); color: var(--t2); }
+.filter-btn.on    { background: var(--a-bg); color: var(--accent); }
+.filter-pill {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 10px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Dashboard card ── */
+.dash-card {
+  margin: 16px 28px 0;
+}
+.dash-section-border {
+  border: 1px solid var(--brd);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surf);
+  margin-bottom: 40px;
+}
+.filters {
+  padding: 14px 20px 4px !important;
+}
+.search-row {
+  padding: 0 20px 10px !important;
+}
+.sort-row {
+  padding: 0 20px 10px !important;
+}
+.tbl-wrap {
+  padding: 0 !important;
+  overflow-x: auto;
+}
+
+/* ── Campaign search ── */
+.search-row {
+  padding: 0 28px 12px;
+}
+.search-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 260px;
+}
+.search-icon {
+  position: absolute;
+  left: 9px;
+  color: var(--t3);
+  font-size: 15px;
+  pointer-events: none;
+  line-height: 1;
+}
+.search-input {
+  width: 100%;
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: 7px;
+  color: var(--t1);
+  font-size: 12px;
+  font-family: inherit;
+  padding: 6px 28px 6px 28px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--t3); }
+.search-clear {
+  position: absolute;
+  right: 7px;
+  background: none;
+  border: none;
+  color: var(--t3);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 3px;
+  display: none;
+  line-height: 1;
+}
+.search-clear:hover { color: var(--t1); }
+.search-clear.visible { display: block; }
+
+/* ── Sort controls ── */
+.sort-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 0 28px 10px;
+  font-size: 11px;
+  color: var(--t3);
+}
+.sort-row select {
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: 5px;
+  color: var(--t2);
+  font-size: 11px;
+  font-family: inherit;
+  padding: 4px 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ── Table ── */
+.tbl-wrap {
+  padding: 0 28px;
+  overflow-x: auto;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+thead th {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--t3);
+  padding: 10px 10px;
+  background: var(--surf);
+  border-bottom: 1px solid var(--brd);
+  border-right: 1px solid var(--brd);
+  text-align: left;
+  white-space: normal;
+  word-break: break-word;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1.35;
+}
+thead th:last-child { border-right: none; }
+thead th:hover { color: var(--t2); }
+thead th.th-r { text-align: right; }
+thead th.sorted { color: var(--accent); }
+thead th .sort-arrow { margin-left: 3px; opacity: 0.5; }
+thead th.sorted .sort-arrow { opacity: 1; }
+
+tbody tr {
+  border-bottom: 1px solid var(--brd);
+  transition: background 0.08s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--row-hover); }
+
+td {
+  padding: 11px 10px;
+  vertical-align: middle;
+  border-right: 1px solid var(--brd);
+}
+td:last-child { border-right: none; }
+
+.td-name {
+  width: 35%;
+  min-width: 240px;
+}
+.camp-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--t1);
+  white-space: normal;
+  word-break: break-word;
+  display: block;
+  line-height: 1.4;
+  text-decoration: none;
+}
+.camp-name:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.camp-id {
+  font-size: 10px;
+  color: var(--t3);
+  margin-top: 2px;
+}
+
+/* Status badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.bdot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.b-run   { background: rgba(91,141,238,0.12); color: var(--c-run); }
+.b-run   .bdot { background: var(--c-run); }
+.b-pause { background: rgba(217,168,78,0.12); color: var(--c-pause); }
+.b-pause .bdot { background: var(--c-pause); }
+.b-fin   { background: rgba(78,166,118,0.12); color: var(--c-fin); }
+.b-fin   .bdot { background: var(--c-fin); }
+.b-draft { background: rgba(107,107,107,0.12); color: var(--c-draft); }
+.b-draft .bdot { background: var(--c-draft); }
+.b-fail  { background: rgba(217,107,100,0.12); color: var(--c-fail); }
+.b-fail  .bdot { background: var(--c-fail); }
+
+/* Numeric cells */
+.num-cell { text-align: right; padding-left: 6px; padding-right: 10px; }
+.num-big  { font-size: 13px; font-weight: 600; color: #ffffff; }
+.num-seq  { color: #ffffff; }
+.num-conn { color: #ffffff; }
+.num-pend { color: #ffffff; }
+.num-fin  { color: #ffffff; }
+.num-fail { color: #ffffff; }
+.num-est  { font-style: italic; opacity: 0.75; }
+.num-nil  { color: var(--t3); font-size: 11px; }
+
+/* Sender column filter */
+.td-sender { white-space: nowrap; }
+.col-filter-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--t2);
+  font-size: 15px;
+  padding: 0 2px;
+  line-height: 1;
+  vertical-align: middle;
+  transition: color 0.1s;
+}
+.col-filter-btn:hover { color: var(--t1); }
+.sender-filter-dot {
+  display: inline-block;
+  width: 5px; height: 5px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-right: 2px;
+  vertical-align: middle;
+}
+
+/* Sender dropdown */
+.col-filter-dropdown {
+  position: absolute;
+  z-index: 200;
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  min-width: 200px;
+  padding: 6px 0;
+  font-size: 12px;
+}
+.cfd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--t3);
+  border-bottom: 1px solid var(--brd);
+  margin-bottom: 4px;
+}
+.cfd-clear {
+  background: none; border: none; cursor: pointer;
+  color: var(--accent); font-size: 10px; font-family: inherit;
+  padding: 0;
+}
+.cfd-clear:hover { opacity: 0.8; }
+.cfd-footer {
+  border-top: 1px solid var(--brd);
+  padding: 6px 12px 4px;
+  margin-top: 4px;
+  text-align: right;
+}
+.cfd-apply {
+  background: var(--accent); border: none; border-radius: 5px;
+  color: #fff; font-size: 11px; font-family: inherit; font-weight: 600;
+  padding: 5px 14px; cursor: pointer;
+}
+.cfd-apply:hover { opacity: 0.88; }
+.cfd-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+.cfd-row:hover { background: var(--surf2); }
+.cfd-row input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 13px; height: 13px;
+  cursor: pointer; flex-shrink: 0;
+}
+.cfd-name { flex: 1; color: var(--t1); }
+.cfd-lastName { color: var(--t2); }
+.cfd-select-all-row { background: var(--surf2); }
+.cfd-divider { border-top: 1px solid var(--brd); margin: 2px 0; }
+.cfd-count {
+  font-size: 10px;
+  color: var(--t3);
+  background: var(--surf2);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Progress bar */
+.prog-cell { min-width: 120px; max-width: 160px; }
+.prog-bar {
+  height: 5px;
+  background: var(--bar-bg);
+  border-radius: 3px;
+  display: flex;
+  overflow: hidden;
+  gap: 1px;
+}
+.seg { height: 100%; border-radius: 1px; min-width: 1px; }
+.seg-seq  { background: var(--c-run); }
+.seg-pend { background: var(--c-pause); }
+.seg-fin  { background: var(--c-fin); }
+.seg-fail { background: var(--c-fail); }
+.seg-stop { background: var(--c-draft); }
+.prog-nums {
+  font-size: 9px;
+  color: var(--t3);
+  margin-top: 3px;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  gap: 16px;
+  padding: 16px 28px 0;
+  flex-wrap: wrap;
+}
+.leg-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: var(--t3);
+}
+.leg-sq {
+  width: 9px; height: 9px;
+  border-radius: 2px; flex-shrink: 0;
+}
+.ls-seq  { background: var(--c-run); }
+.ls-pend { background: var(--c-pause); }
+.ls-fin  { background: var(--c-fin); }
+.ls-fail { background: var(--c-fail); }
+.ls-stop { background: var(--c-draft); }
+
+/* Note */
+.note {
+  margin: 18px 28px 0;
+  padding: 10px 14px;
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-left: 3px solid var(--c-pause);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--t2);
+  line-height: 1.6;
+}
+.note strong { color: var(--t1); }
+
+@media (max-width: 1100px) {
+  .kpi-row { grid-template-columns: repeat(3,1fr); }
+}
+@media (max-width: 900px) {
+  .hdr { padding-left:16px; padding-right:16px; }
+  .dash-card { margin-left:16px; margin-right:16px; }
+  .dash-section-border { border-radius: 8px; }
+}
+@media (max-width: 600px) {
+  .kpi-row { grid-template-columns: repeat(2,1fr); }
+}
+
+/* ── Workspace selector ── */
+.ws-bar {
+  display: flex; align-items: center; gap: 8px;
+}
+.ws-select {
+  background: var(--surf2);
+  border: 1px solid var(--brd);
+  border-radius: 7px;
+  color: var(--t1);
+  font-size: 12px;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 5px 10px;
+  cursor: pointer;
+  outline: none;
+  max-width: 180px;
+}
+.ws-select:focus { border-color: var(--accent); }
+.icon-btn {
+  background: var(--surf2);
+  border: 1px solid var(--brd);
+  border-radius: 7px;
+  color: var(--t2);
+  font-size: 14px;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: color 0.1s, background 0.1s;
+}
+.icon-btn:hover { color: var(--t1); background: var(--surf); }
+.icon-btn.spinning .spin-icon { display: inline-block; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.sync-status {
+  font-size: 10px;
+  color: var(--t3);
+  white-space: nowrap;
+}
+.sync-ok  { color: var(--c-fin); }
+.sync-err { color: var(--c-fail); }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-overlay.hidden { display: none; }
+.modal-box {
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: 14px;
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+.modal-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal-hdr h3 { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+.modal-close {
+  background: none; border: none;
+  color: var(--t3); font-size: 16px;
+  cursor: pointer; width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+}
+.modal-close:hover { background: var(--surf2); color: var(--t1); }
+.ws-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+.ws-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surf2); border: 1px solid var(--brd);
+  border-radius: 9px; padding: 10px 12px;
+  cursor: pointer; transition: border-color 0.1s;
+}
+.ws-item:hover { border-color: var(--accent); }
+.ws-item.active { border-color: var(--accent); background: var(--a-bg); }
+.ws-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--t3); flex-shrink: 0; }
+.ws-item.active .ws-dot { background: var(--c-fin); }
+.ws-info { flex: 1; min-width: 0; }
+.ws-name { font-size: 13px; font-weight: 500; color: var(--t1); }
+.ws-key-hint { font-size: 10px; color: var(--t3); margin-top: 2px; }
+.ws-del {
+  background: none; border: none; color: var(--t3);
+  cursor: pointer; font-size: 13px; padding: 2px 6px;
+  border-radius: 4px;
+}
+.ws-del:hover { color: var(--c-fail); background: rgba(224,88,88,0.1); }
+.divider { border: none; border-top: 1px solid var(--brd); margin: 20px 0; }
+.modal-section-title {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--t3); margin-bottom: 12px;
+}
+.field { margin-bottom: 12px; }
+.field label { font-size: 11px; color: var(--t2); display: block; margin-bottom: 5px; }
+.field input {
+  width: 100%; background: var(--surf2);
+  border: 1px solid var(--brd); border-radius: 7px;
+  color: var(--t1); font-family: inherit; font-size: 13px;
+  padding: 8px 10px; outline: none;
+  box-sizing: border-box;
+}
+.field input:focus { border-color: var(--accent); }
+.btn-primary {
+  background: var(--accent); color: #fff;
+  border: none; border-radius: 7px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  padding: 9px 18px; cursor: pointer; width: 100%;
+  transition: opacity 0.1s;
+}
+.btn-primary:hover { opacity: 0.88; }
+.api-error {
+  margin-top: 10px; padding: 8px 12px;
+  background: rgba(224,88,88,0.1);
+  border: 1px solid rgba(224,88,88,0.25);
+  border-radius: 6px; font-size: 11px; color: var(--c-fail);
+  display: none;
+}
+.lead-count {
+  font-size: 10px; color: var(--t3); margin-top: 2px;
+}
+.lead-count strong { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<!-- Settings modal -->
+<div class="modal-overlay hidden" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <h3>Workspaces</h3>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="ws-list" id="wsList"></div>
+    <hr class="divider">
+    <div class="modal-section-title">Add Workspace</div>
+    <div class="field"><label>Company / Workspace name</label><input id="wsName" placeholder="e.g. GrailPay"></div>
+    <div class="field"><label>HeyReach API Key</label><input id="wsKey" type="password" placeholder="Paste your API key"></div>
+    <div class="api-error" id="apiError"></div>
+    <button class="btn-primary" id="saveWsBtn" onclick="saveWorkspace()">Save &amp; Fetch Data</button>
+  </div>
+</div>
+
+<div class="hdr">
+  <div class="hdr-left">
+    <div class="hdr-logo">H</div>
+    <div>
+      <div class="hdr-title">HeyReach Live Dashboard</div>
+      <div class="hdr-sub">HeyReach · LinkedIn Outreach</div>
+    </div>
+  </div>
+  <div class="hdr-right" style="display:flex;align-items:center;gap:10px">
+    <div class="ws-bar">
+      <select class="ws-select" id="wsSelect" onchange="switchWorkspace(this.value)">
+        <option value="__demo__">Demo Data</option>
+      </select>
+      <button class="icon-btn" id="refreshBtn" title="Refresh from HeyReach API" onclick="refreshActive()"><span class="spin-icon">↻</span></button>
+      <button class="icon-btn" title="Manage workspaces" onclick="openSettings()">⚙</button>
+    </div>
+    <div>
+      <div style="text-align:right"><span class="live-dot"></span><span id="syncLabel">No workspace — add one via ⚙</span></div>
+      <div class="sync-status" id="syncStatus"></div>
+    </div>
+  </div>
+</div>
+
+<div class="dash-card">
+
+<div class="kpi-row" id="kpiRow"></div>
+
+<div class="dash-section-border">
+  <div class="filters" id="filters"></div>
+
+  <div class="search-row">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="campaignSearch" class="search-input" placeholder="Search campaigns…" oninput="renderTable()">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" title="Clear">✕</button>
+    </div>
+  </div>
+
+  <div class="sort-row">
+    Sort by
+    <select id="sortSelect" onchange="renderTable()">
+      <option value="status">Status</option>
+      <option value="name">Name</option>
+      <option value="total">Total Leads</option>
+      <option value="analyticsCount">Lead Analytics</option>
+      <option value="pending">Pending</option>
+      <option value="connCheck">Conn. Check</option>
+      <option value="remaining">Remaining Leads</option>
+    </select>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Campaign</th>
+          <th style="width:90px">Status</th>
+          <th id="th-sender" style="width:100px; position:relative">Sender <button class="col-filter-btn" onclick="toggleSenderDropdown(event)" title="Filter by sender">▾</button></th>
+          <th class="th-r" style="width:70px" onclick="setSort('total')" id="th-total">Total <span class="sort-arrow">↕</span></th>
+          <th class="th-r" style="width:85px" onclick="setSort('analyticsCount')" id="th-analyticsCount" title="Total lead count from HeyReach Lead Analytics">Lead Analytics <span class="sort-arrow">↕</span></th>
+          <th class="th-r" style="width:70px" onclick="setSort('pending')" id="th-pending">Pending <span class="sort-arrow">↕</span></th>
+          <th class="th-r" style="width:80px" onclick="setSort('connCheck')" id="th-connCheck" title="Leads at Is Connection check step">Conn. Check <span class="sort-arrow">↕</span></th>
+          <th class="th-r" style="width:90px" onclick="setSort('remaining')" id="th-remaining" title="(Total − Lead Analytics) + Pending + Conn. Check">Remaining Leads <span class="sort-arrow">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+
+<script>
+const DATA = [];
+
+const STATUS_ORDER = { IN_PROGRESS:0, PAUSED:1, FINISHED:2, DRAFT:3, CANCELED:4 };
+const BADGE_CLS    = { IN_PROGRESS:'b-run', PAUSED:'b-pause', FINISHED:'b-fin', DRAFT:'b-draft', CANCELED:'b-fail' };
+const BADGE_LABEL  = { IN_PROGRESS:'Active', PAUSED:'Paused', FINISHED:'Finished', DRAFT:'Draft', CANCELED:'Canceled' };
+
+let activeFilter = 'ALL';
+// null = no sender filter (show all). Set = show only campaigns whose senders intersect the set.
+let selectedSenders = null;
+let sortKey = 'status';
+let sortAsc = false;
+
+/* ── KPI ── */
+function buildKPIs() {
+  const active = DATA.filter(d => d.status === 'IN_PROGRESS');
+  const totalLeads    = DATA.reduce((s,d) => s + d.total, 0);
+  const totalSeq      = active.reduce((s,d) => s + d.inProgress, 0);
+  const totalPending  = DATA.reduce((s,d) => s + d.pending, 0);
+  const totalFinished = DATA.reduce((s,d) => s + d.finished, 0);
+  // Sum connCheck for active campaigns; mark as estimated if any value is estimated
+  const connActive = active.filter(d => d.connCheck !== null);
+  const totalConn = connActive.reduce((s,d) => s + d.connCheck, 0);
+
+  const kpis = [
+    { label:'Active Campaigns', val: active.length,                   cls:'k-run',  sub:`of ${DATA.length} total` },
+    { label:'Total Leads',      val: totalLeads.toLocaleString(),      cls:'k-tot',  sub:'across all campaigns' },
+    { label:'In Sequence',      val: totalSeq.toLocaleString(),        cls:'k-run',  sub:'active campaigns only' },
+    { label:'Conn. Check',      val: totalConn.toLocaleString(),       cls:'k-conn', sub:'at Is Connection check step' },
+    { label:'Pending',          val: totalPending.toLocaleString(),    cls:'k-paus', sub:'not yet started' },
+    { label:'Completed',        val: totalFinished.toLocaleString(),   cls:'k-fin',  sub:'finished sequence' },
+  ];
+  document.getElementById('kpiRow').innerHTML = kpis.map(k => `
+    <div class="kpi">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-num ${k.cls}">${k.val}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+/* ── Filters ── */
+function buildFilters() {
+  const statusGroups = [
+    { key:'ALL',         label:'All' },
+    { key:'IN_PROGRESS', label:'Active' },
+    { key:'PAUSED',      label:'Paused' },
+    { key:'FINISHED',    label:'Finished' },
+    { key:'DRAFT',       label:'Draft' },
+  ];
+  const counts = {};
+  DATA.forEach(d => { counts[d.status] = (counts[d.status]||0)+1; });
+
+  document.getElementById('filters').innerHTML = statusGroups.map(g => {
+    const n = g.key==='ALL' ? DATA.length : (counts[g.key]||0);
+    const on = activeFilter===g.key ? 'on' : '';
+    return `<button class="filter-btn ${on}" onclick="setFilter('${g.key}')">${g.label}<span class="filter-pill">${n}</span></button>`;
+  }).join('');
+
+  renderSenderFilterHeader();
+}
+
+function renderSenderFilterHeader() {
+  const th = document.getElementById('th-sender');
+  if (!th) return;
+  const isFiltered = selectedSenders !== null;
+  th.innerHTML = `SENDER ${isFiltered ? '<span class="sender-filter-dot"></span>' : ''}<button class="col-filter-btn" onclick="toggleSenderDropdown(event)" title="Filter by sender">▾</button>`;
+}
+
+/* ── Table ── */
+function renderTable() {
+  sortKey = document.getElementById('sortSelect').value;
+  const searchQ = (document.getElementById('campaignSearch')?.value ?? '').trim().toLowerCase();
+  document.getElementById('searchClear')?.classList.toggle('visible', searchQ.length > 0);
+
+  let filtered = activeFilter==='ALL' ? DATA : DATA.filter(d => d.status===activeFilter);
+  if (selectedSenders !== null) filtered = filtered.filter(d => d.senders?.some(s => selectedSenders.has(s)));
+  if (searchQ) filtered = filtered.filter(d => d.name.toLowerCase().includes(searchQ));
+
+  const sorted = [...filtered].sort((a,b) => {
+    if (sortKey==='name')   return a.name.localeCompare(b.name) * (sortAsc?1:-1);
+    if (sortKey==='status') return (STATUS_ORDER[a.status]??9) - (STATUS_ORDER[b.status]??9);
+    // null values sort to the bottom
+    if (sortKey==='connCheck') {
+      const av = a.connCheck ?? -1, bv = b.connCheck ?? -1;
+      return (bv - av) * (sortAsc?-1:1);
+    }
+    if (sortKey==='analyticsCount') {
+      const av = (a.leadCount ?? a.total), bv = (b.leadCount ?? b.total);
+      return (bv - av) * (sortAsc?-1:1);
+    }
+    if (sortKey==='remaining') {
+      const calc = r => r.connCheck !== null ? (r.total - (r.leadCount ?? r.total)) + r.pending + r.connCheck : -1;
+      return (calc(b) - calc(a)) * (sortAsc?-1:1);
+    }
+    return (b[sortKey] - a[sortKey]) * (sortAsc?-1:1);
+  });
+
+  document.getElementById('tbody').innerHTML = sorted.map(row => {
+    const bc = BADGE_CLS[row.status] || 'b-draft';
+    const bl = BADGE_LABEL[row.status] || row.status;
+
+    const senderDisp = row.senders?.length
+      ? row.senders.map(s => s.split(' ')[0]).join(', ')
+      : `<span class="num-nil">—</span>`;
+
+    const connDisp = row.connCheck === null
+      ? `<span class="num-nil">—</span>`
+      : `<span class="num-big num-conn">${row.connCheck.toLocaleString()}</span>`;
+
+    // Lead Analytics count: from API if available, falls back to progressStats total
+    const analyticsCount = row.leadCount ?? row.total;
+
+    // Remaining Leads = (Total − Lead Analytics) + Pending + Conn. Check
+    const remaining = row.connCheck !== null
+      ? (row.total - analyticsCount) + row.pending + row.connCheck
+      : null;
+    const remainingDisp = remaining === null
+      ? `<span class="num-nil">—</span>`
+      : `<span style="font-size:15px;font-weight:700;color:#ffffff;font-variant-numeric:tabular-nums">${remaining.toLocaleString()}</span>`;
+
+    return `<tr>
+      <td class="td-name">
+        <a class="camp-name" href="https://app.heyreach.io/app/campaign/view/${row.id}/performance" target="_blank" rel="noopener" title="${row.name}">${row.name}</a>
+        <span class="camp-id">#${row.id}</span>
+      </td>
+      <td><span class="badge ${bc}"><span class="bdot"></span>${bl}</span></td>
+      <td class="td-sender" style="font-size:12px;color:var(--t2)">${senderDisp}</td>
+      <td class="num-cell"><span class="num-big">${row.total.toLocaleString()}</span></td>
+      <td class="num-cell"><span class="num-big" style="color:var(--t2)">${analyticsCount.toLocaleString()}</span></td>
+      <td class="num-cell"><span class="num-big num-pend">${row.pending.toLocaleString()}</span></td>
+      <td class="num-cell">${connDisp}</td>
+      <td class="num-cell">${remainingDisp}</td>
+    </tr>`;
+  }).join('');
+}
+
+function setFilter(key) {
+  activeFilter = key;
+  buildFilters();
+  renderTable();
+}
+
+function toggleSenderDropdown(e) {
+  e.stopPropagation();
+  const existing = document.getElementById('senderDropdown');
+  if (existing) { existing.remove(); return; }
+
+  const allSenders = [...new Set(DATA.flatMap(d => d.senders ?? []))].sort();
+  if (!allSenders.length) return;
+
+  const effectiveSelected = selectedSenders !== null ? selectedSenders : new Set(allSenders);
+  const allChecked = selectedSenders === null;
+
+  const btn = e.currentTarget;
+  const rect = btn.getBoundingClientRect();
+
+  const dd = document.createElement('div');
+  dd.id = 'senderDropdown';
+  dd.className = 'col-filter-dropdown';
+  dd.addEventListener('click', ev => ev.stopPropagation());
+
+  dd.innerHTML = `
+    <div class="cfd-header">
+      <span>Filter by Sender</span>
+      <button class="cfd-clear" onclick="clearSenderFilter()">Clear</button>
+    </div>
+    <label class="cfd-row cfd-select-all-row">
+      <input type="checkbox" id="cfd-select-all" ${allChecked ? 'checked' : ''} onchange="toggleSelectAll(this.checked)">
+      <span class="cfd-name" style="font-weight:600;color:var(--t1)">Select All</span>
+    </label>
+    <div class="cfd-divider"></div>
+    ${allSenders.map(s => {
+      const first = s.split(' ')[0];
+      const last  = s.split(' ').slice(1).join(' ');
+      const n     = DATA.filter(d => d.senders?.includes(s)).length;
+      const chk   = effectiveSelected.has(s) ? 'checked' : '';
+      return `<label class="cfd-row">
+        <input type="checkbox" ${chk} data-sender="${s}" onchange="toggleSender(event)">
+        <span class="cfd-name">${first} <span class="cfd-lastName">${last}</span></span>
+        <span class="cfd-count">${n}</span>
+      </label>`;
+    }).join('')}
+    <div class="cfd-footer">
+      <button class="cfd-apply" onclick="closeSenderDropdown()">Done</button>
+    </div>
+  `;
+
+  dd.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+  dd.style.left = Math.max(8, rect.left + window.scrollX - 170) + 'px';
+  document.body.appendChild(dd);
+
+  setTimeout(() => document.addEventListener('click', closeSenderDropdown, { once: true }), 0);
+}
+
+function closeSenderDropdown() {
+  document.getElementById('senderDropdown')?.remove();
+}
+
+function toggleSender(e) {
+  const allSenders = [...new Set(DATA.flatMap(d => d.senders ?? []))];
+
+  // Materialise implicit "all selected" if needed
+  if (selectedSenders === null) selectedSenders = new Set(allSenders);
+
+  if (e.target.checked) selectedSenders.add(e.target.dataset.sender);
+  else selectedSenders.delete(e.target.dataset.sender);
+
+  // If all senders are checked again, revert to null (no filter = show all)
+  if (selectedSenders.size === allSenders.length) selectedSenders = null;
+
+  // Sync the Select All checkbox state
+  const sa = document.getElementById('cfd-select-all');
+  if (sa) sa.checked = selectedSenders === null;
+
+  renderSenderFilterHeader();
+  renderTable();
+}
+
+function toggleSelectAll(checked) {
+  if (checked) {
+    // Select All → check every sender, remove filter
+    selectedSenders = null;
+    document.querySelectorAll('#senderDropdown input[data-sender]').forEach(cb => cb.checked = true);
+  } else {
+    // Deselect All → uncheck every sender
+    selectedSenders = new Set();
+    document.querySelectorAll('#senderDropdown input[data-sender]').forEach(cb => cb.checked = false);
+  }
+  renderSenderFilterHeader();
+  renderTable();
+}
+
+function clearSenderFilter() {
+  // Clear = uncheck all individual senders
+  selectedSenders = new Set();
+  document.querySelectorAll('#senderDropdown input[data-sender]').forEach(cb => cb.checked = false);
+  const sa = document.getElementById('cfd-select-all');
+  if (sa) sa.checked = false;
+  renderSenderFilterHeader();
+  renderTable();
+}
+
+function clearSearch() {
+  const el = document.getElementById('campaignSearch');
+  if (el) el.value = '';
+  document.getElementById('searchClear')?.classList.remove('visible');
+  renderTable();
+}
+
+function setSort(key) {
+  if (sortKey===key) sortAsc = !sortAsc;
+  else { sortKey = key; sortAsc = false; }
+  document.getElementById('sortSelect').value = key;
+  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+  const el = document.getElementById('th-'+key);
+  if (el) el.classList.add('sorted');
+  renderTable();
+}
+
+buildKPIs();
+buildFilters();
+renderTable();
+
+/* ══════════════════════════════════════════════
+   WORKSPACE / API KEY MANAGEMENT
+   ══════════════════════════════════════════════ */
+// Calls go to local proxy (/heyreach-api/*) which forwards to HeyReach — avoids CORS.
+const HR_API = '/heyreach-api';
+const DEMO_ID = '__demo__';
+
+let workspaces = JSON.parse(localStorage.getItem('hr_workspaces') || '[]');
+let activeWsId  = localStorage.getItem('hr_active_ws') || DEMO_ID;
+
+function saveWsStore() {
+  localStorage.setItem('hr_workspaces', JSON.stringify(workspaces));
+}
+
+/* ── Build the <select> dropdown ── */
+function renderWsSelect() {
+  const sel = document.getElementById('wsSelect');
+  // keep demo option, add saved workspaces
+  sel.innerHTML = `<option value="${DEMO_ID}">Demo Data</option>` +
+    workspaces.map(w =>
+      `<option value="${w.id}">${w.name}</option>`
+    ).join('');
+  sel.value = activeWsId;
+}
+
+/* ── Settings modal ── */
+function openSettings() {
+  renderWsList();
+  document.getElementById('wsName').value = '';
+  document.getElementById('wsKey').value  = '';
+  document.getElementById('apiError').style.display = 'none';
+  document.getElementById('settingsModal').classList.remove('hidden');
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.add('hidden');
+}
+document.getElementById('settingsModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('settingsModal')) closeSettings();
+});
+
+function renderWsList() {
+  const el = document.getElementById('wsList');
+  if (!workspaces.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--t3);text-align:center;padding:8px 0">No workspaces yet — add one below.</div>';
+    return;
+  }
+  el.innerHTML = workspaces.map(w => `
+    <div class="ws-item ${w.id === activeWsId ? 'active' : ''}" onclick="switchWorkspace('${w.id}');closeSettings()">
+      <div class="ws-dot"></div>
+      <div class="ws-info">
+        <div class="ws-name">${w.name}</div>
+        <div class="ws-key-hint">API key: ••••${w.key.slice(-6)}${w.lastSync ? ' · synced ' + new Date(w.lastSync).toLocaleTimeString() : ' · never synced'}</div>
+      </div>
+      <button class="ws-del" onclick="event.stopPropagation();deleteWorkspace('${w.id}')" title="Remove">✕</button>
+    </div>`).join('');
+}
+
+async function saveWorkspace() {
+  const name = document.getElementById('wsName').value.trim();
+  const key  = document.getElementById('wsKey').value.trim();
+  const errEl = document.getElementById('apiError');
+  const btn   = document.getElementById('saveWsBtn');
+  errEl.style.display = 'none';
+
+  if (!name || !key) { showApiError('Please fill in both fields.'); return; }
+
+  btn.textContent = 'Fetching…';
+  btn.disabled = true;
+
+  try {
+    const data = await fetchCampaigns(key);
+    const ws = { id: 'ws_' + Date.now(), name, key, lastSync: Date.now(), data };
+    workspaces.push(ws);
+    saveWsStore();
+    switchWorkspace(ws.id);
+    closeSettings();
+  } catch(e) {
+    showApiError('Could not reach HeyReach API. Check your API key and network. (' + e.message + ')');
+  } finally {
+    btn.textContent = 'Save & Fetch Data';
+    btn.disabled = false;
+  }
+}
+
+function showApiError(msg) {
+  const el = document.getElementById('apiError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function deleteWorkspace(id) {
+  workspaces = workspaces.filter(w => w.id !== id);
+  saveWsStore();
+  if (activeWsId === id) switchWorkspace(DEMO_ID);
+  else renderWsList();
+  renderWsSelect();
+}
+
+/* ── Switch active workspace ── */
+function switchWorkspace(id) {
+  activeWsId = id;
+  localStorage.setItem('hr_active_ws', id);
+  document.getElementById('wsSelect').value = id;
+
+  if (id === DEMO_ID) {
+    DATA.length = 0;
+    document.getElementById('syncLabel').textContent = 'No workspace — add one via ⚙';
+    document.getElementById('syncStatus').textContent = '';
+    document.getElementById('syncStatus').className = 'sync-status';
+  } else {
+    const ws = workspaces.find(w => w.id === id);
+    if (ws?.data) {
+      loadWorkspaceData(ws);
+    }
+  }
+  buildKPIs(); buildFilters(); renderTable();
+}
+
+function loadWorkspaceData(ws) {
+  DATA.length = 0;
+  ws.data.forEach(d => DATA.push(d));
+  const t = ws.lastSync ? new Date(ws.lastSync).toLocaleString() : 'never';
+  document.getElementById('syncLabel').textContent = ws.name + ' · ' + new Date(ws.lastSync).toLocaleDateString();
+  document.getElementById('syncStatus').textContent = 'synced ' + t;
+  document.getElementById('syncStatus').className = 'sync-status sync-ok';
+}
+
+/* ── Refresh live data for active workspace ── */
+async function refreshActive() {
+  if (activeWsId === DEMO_ID) {
+    alert('Demo mode — add a workspace with an API key to fetch live data.');
+    return;
+  }
+  const ws = workspaces.find(w => w.id === activeWsId);
+  if (!ws) return;
+
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  document.getElementById('syncStatus').textContent = 'Fetching…';
+  document.getElementById('syncStatus').className = 'sync-status';
+
+  try {
+    ws.data = await fetchCampaigns(ws.key);
+    ws.lastSync = Date.now();
+    saveWsStore();
+    loadWorkspaceData(ws);
+    buildKPIs(); buildFilters(); renderTable();
+  } catch(e) {
+    document.getElementById('syncStatus').textContent = 'Error: ' + e.message;
+    document.getElementById('syncStatus').className = 'sync-status sync-err';
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+/* ── HeyReach API calls ── */
+async function hrPost(apiKey, path, body = {}) {
+  const url = `${HR_API}${path}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status} on POST ${url}${txt ? ' → ' + txt.slice(0,120) : ''}`);
+  }
+  return res.json();
+}
+
+async function fetchCampaigns(apiKey) {
+  const json = await hrPost(apiKey, '/campaign/GetAll', { offset: 0, limit: 100 });
+  const items = json.items ?? json;
+
+  const campaigns = items.map(c => ({
+    id:         c.id,
+    name:       c.name,
+    status:     c.status,
+    total:      c.progressStats?.totalUsers ?? 0,
+    inProgress: c.progressStats?.totalUsersInProgress ?? 0,
+    pending:    c.progressStats?.totalUsersPending ?? 0,
+    finished:   c.progressStats?.totalUsersFinished ?? 0,
+    failed:     c.progressStats?.totalUsersFailed ?? 0,
+    stopped:    c.progressStats?.totalUsersManuallyStopped ?? 0,
+    excluded:   c.progressStats?.totalUsersExcluded ?? 0,
+    connCheck:  null,
+    leadCount:  null,
+    senders:    null,
+  }));
+
+  // Active campaigns: paginate all leads for connCheck + senders + leadCount
+  const active = campaigns.filter(c => c.status === 'IN_PROGRESS');
+  for (let i = 0; i < active.length; i += 3) {
+    const batch = active.slice(i, i + 3);
+    await Promise.all(batch.map(async c => {
+      try {
+        let offset = 0, total = null, connCheck = 0;
+        const senderNames = new Set();
+        do {
+          const lj = await hrPost(apiKey, '/campaign/GetLeadsFromCampaign', { campaignId: c.id, offset, limit: 100 });
+          if (total === null) { total = lj.totalCount ?? 0; c.leadCount = total; }
+          for (const lead of lj.items ?? []) {
+            if (lead.leadCampaignStatus === 'InSequence' && lead.leadConnectionStatus === 'None') connCheck++;
+            if (lead.linkedInSenderFullName) senderNames.add(lead.linkedInSenderFullName);
+          }
+          offset += 100;
+        } while (offset < total);
+        c.connCheck = connCheck;
+        c.senders = [...senderNames].sort();
+      } catch(_) {}
+    }));
+  }
+
+  // Non-active campaigns: paginate all leads for connCheck + leadCount + senders
+  const inactive = campaigns.filter(c => c.status !== 'IN_PROGRESS');
+  for (let i = 0; i < inactive.length; i += 3) {
+    const batch = inactive.slice(i, i + 3);
+    await Promise.all(batch.map(async c => {
+      try {
+        let offset = 0, total = null, connCheck = 0;
+        const senderNames = new Set();
+        do {
+          const lj = await hrPost(apiKey, '/campaign/GetLeadsFromCampaign', { campaignId: c.id, offset, limit: 100 });
+          if (total === null) { total = lj.totalCount ?? 0; c.leadCount = total; }
+          for (const lead of lj.items ?? []) {
+            if (lead.leadCampaignStatus === 'InSequence' && lead.leadConnectionStatus === 'None') connCheck++;
+            if (lead.linkedInSenderFullName) senderNames.add(lead.linkedInSenderFullName);
+          }
+          offset += 100;
+        } while (offset < total);
+        c.connCheck = connCheck;
+        c.senders = [...senderNames].sort();
+      } catch(_) {}
+    }));
+  }
+
+  return campaigns;
+}
+
+/* ── Init ── */
+renderWsSelect();
+if (activeWsId !== DEMO_ID) {
+  const ws = workspaces.find(w => w.id === activeWsId);
+  if (ws?.data) { loadWorkspaceData(ws); buildKPIs(); buildFilters(); renderTable(); }
+  else switchWorkspace(DEMO_ID);
+}
+</script>
+</body>
+</html>
