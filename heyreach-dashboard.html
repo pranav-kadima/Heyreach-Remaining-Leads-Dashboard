@@ -339,8 +339,18 @@ td:last-child { border-right: none; }
 .num-est  { font-style: italic; opacity: 0.75; }
 .num-nil  { color: var(--t3); font-size: 11px; }
 
-/* Sender column filter */
+/* Sender badges */
 .td-sender { white-space: nowrap; }
+.sender-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 5px;
+  margin: 1px 2px 1px 0;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
 .col-filter-btn {
   background: none;
   border: none;
@@ -629,6 +639,31 @@ td:last-child { border-right: none; }
   font-size: 10px; color: var(--t3); margin-top: 2px;
 }
 .lead-count strong { color: var(--accent); }
+
+/* ── Totals footer row ── */
+tfoot tr {
+  border-top: 2px solid var(--brd);
+  background: var(--surf2);
+}
+tfoot td {
+  padding: 11px 10px;
+  vertical-align: middle;
+  border-right: 1px solid var(--brd);
+}
+tfoot td:last-child { border-right: none; }
+.tfoot-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.tfoot-remaining {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
 </style>
 </head>
 <body>
@@ -716,6 +751,7 @@ td:last-child { border-right: none; }
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
+      <tfoot id="tfoot"></tfoot>
     </table>
   </div>
 </div>
@@ -725,6 +761,23 @@ td:last-child { border-right: none; }
 
 <script>
 const DATA = [];
+
+const SENDER_COLORS = [
+  '#4a7fc1', // blue
+  '#9b4a4a', // terracotta
+  '#4a8a5d', // green
+  '#7a5a9b', // purple
+  '#8a6a4a', // brown
+  '#4a8a8a', // teal
+  '#9b6a3a', // orange
+  '#5a7a4a', // olive
+];
+
+function senderColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return SENDER_COLORS[hash % SENDER_COLORS.length];
+}
 
 const STATUS_ORDER = { IN_PROGRESS:0, PAUSED:1, FINISHED:2, DRAFT:3, CANCELED:4 };
 const BADGE_CLS    = { IN_PROGRESS:'b-run', PAUSED:'b-pause', FINISHED:'b-fin', DRAFT:'b-draft', CANCELED:'b-fail' };
@@ -820,12 +873,39 @@ function renderTable() {
     return (b[sortKey] - a[sortKey]) * (sortAsc?-1:1);
   });
 
+  // Compute totals over the visible sorted rows
+  let tTotal = 0, tAnalytics = 0, tPending = 0, tConn = 0, tRemaining = 0;
+  let anyConn = false;
+  for (const row of sorted) {
+    const analyticsCount = row.leadCount ?? row.total;
+    tTotal     += row.total;
+    tAnalytics += analyticsCount;
+    tPending   += row.pending;
+    if (row.connCheck !== null) { tConn += row.connCheck; anyConn = true; }
+    if (row.connCheck !== null) {
+      tRemaining += (row.total - analyticsCount) + row.pending + row.connCheck;
+    }
+  }
+  document.getElementById('tfoot').innerHTML = sorted.length === 0 ? '' : `<tr>
+    <td class="tfoot-label">Total (${sorted.length} campaign${sorted.length === 1 ? '' : 's'})</td>
+    <td></td>
+    <td></td>
+    <td class="num-cell"><span class="num-big">${tTotal.toLocaleString()}</span></td>
+    <td class="num-cell"><span class="num-big" style="color:var(--t2)">${tAnalytics.toLocaleString()}</span></td>
+    <td class="num-cell"><span class="num-big num-pend">${tPending.toLocaleString()}</span></td>
+    <td class="num-cell">${anyConn ? `<span class="num-big num-conn">${tConn.toLocaleString()}</span>` : `<span class="num-nil">—</span>`}</td>
+    <td class="num-cell"><span class="tfoot-remaining">${anyConn ? tRemaining.toLocaleString() : '—'}</span></td>
+  </tr>`;
+
   document.getElementById('tbody').innerHTML = sorted.map(row => {
     const bc = BADGE_CLS[row.status] || 'b-draft';
     const bl = BADGE_LABEL[row.status] || row.status;
 
     const senderDisp = row.senders?.length
-      ? row.senders.map(s => s.split(' ')[0]).join(', ')
+      ? row.senders.map(s => {
+          const first = s.split(' ')[0];
+          return `<span class="sender-badge" style="background:${senderColor(s)}">${first}</span>`;
+        }).join('')
       : `<span class="num-nil">—</span>`;
 
     const connDisp = row.connCheck === null
@@ -849,7 +929,7 @@ function renderTable() {
         <span class="camp-id">#${row.id}</span>
       </td>
       <td><span class="badge ${bc}"><span class="bdot"></span>${bl}</span></td>
-      <td class="td-sender" style="font-size:12px;color:var(--t2)">${senderDisp}</td>
+      <td class="td-sender">${senderDisp}</td>
       <td class="num-cell"><span class="num-big">${row.total.toLocaleString()}</span></td>
       <td class="num-cell"><span class="num-big" style="color:var(--t2)">${analyticsCount.toLocaleString()}</span></td>
       <td class="num-cell"><span class="num-big num-pend">${row.pending.toLocaleString()}</span></td>
