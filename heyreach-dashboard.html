@@ -667,7 +667,7 @@ td:last-child { border-right: none; }
       <button class="icon-btn" title="Manage workspaces" onclick="openSettings()">⚙</button>
     </div>
     <div>
-      <div style="text-align:right"><span class="live-dot"></span><span id="syncLabel">Demo · Jul 18, 2026</span></div>
+      <div style="text-align:right"><span class="live-dot"></span><span id="syncLabel">No workspace — add one via ⚙</span></div>
       <div class="sync-status" id="syncStatus"></div>
     </div>
   </div>
@@ -724,51 +724,7 @@ td:last-child { border-right: none; }
 
 
 <script>
-// connCheck = "Is Connection check" leads: InSequence AND leadConnectionStatus = None
-// (These are leads at the connection-check step — HeyReach checked if connected, found not connected)
-// All values exact from per-lead API pulls — no estimates.
-const DATA = [
-  { id:496207, name:"QA Test Eng (Hiring)",                  status:"IN_PROGRESS", total:138, inProgress:131, pending:0,   finished:1,   failed:6,  stopped:0,  excluded:0,  connCheck:92  },
-  { id:496202, name:"Mid-level Backend Eng (Hiring)",         status:"PAUSED",      total:195, inProgress:91,  pending:69,  finished:16,  failed:19, stopped:0,  excluded:0,  connCheck:null },
-  { id:496198, name:"Senior Backend Eng (Hiring)",            status:"PAUSED",      total:64,  inProgress:51,  pending:0,   finished:4,   failed:9,  stopped:0,  excluded:0,  connCheck:null },
-  { id:494548, name:"Soma Capital – Direct (Will Inmail)",    status:"FINISHED",    total:53,  inProgress:8,   pending:0,   finished:35,  failed:10, stopped:0,  excluded:0,  connCheck:null },
-  { id:494543, name:"Soma Capital – Direct (Joey Inmail)",    status:"IN_PROGRESS", total:50,  inProgress:6,   pending:0,   finished:36,  failed:8,  stopped:0,  excluded:0,  connCheck:0   },
-  { id:487975, name:"Maryland Inmail (Friendly)",             status:"IN_PROGRESS", total:44,  inProgress:16,  pending:0,   finished:23,  failed:5,  stopped:0,  excluded:0,  connCheck:0   },
-  { id:487974, name:"Maryland Inmail (Direct)",               status:"IN_PROGRESS", total:51,  inProgress:15,  pending:0,   finished:32,  failed:4,  stopped:0,  excluded:0,  connCheck:0   },
-  { id:480024, name:"Generalist Hiring Search",               status:"PAUSED",      total:344, inProgress:241, pending:24,  finished:49,  failed:27, stopped:0,  excluded:3,  connCheck:null },
-  { id:480013, name:"Name Drop – Friendly (Joey)",            status:"IN_PROGRESS", total:540, inProgress:348, pending:0,   finished:153, failed:4,  stopped:0,  excluded:35, connCheck:91  },
-  { id:479196, name:"ex-Brex Friendly",                       status:"IN_PROGRESS", total:29,  inProgress:5,   pending:0,   finished:22,  failed:0,  stopped:0,  excluded:2,  connCheck:0   },
-  { id:477792, name:"Cold Targets – Will Direct (Inmail)",    status:"FINISHED",    total:12,  inProgress:0,   pending:0,   finished:12,  failed:0,  stopped:0,  excluded:0,  connCheck:null },
-  { id:477788, name:"Cold Targets – Will Friendly (Inmail)",  status:"FINISHED",    total:13,  inProgress:0,   pending:0,   finished:9,   failed:4,  stopped:0,  excluded:0,  connCheck:null },
-  { id:477430, name:"Test",                                   status:"DRAFT",       total:0,   inProgress:0,   pending:0,   finished:0,   failed:0,  stopped:0,  excluded:0,  connCheck:null },
-  { id:465760, name:"College Inmail (Direct)",                status:"FINISHED",    total:59,  inProgress:3,   pending:0,   finished:39,  failed:17, stopped:0,  excluded:0,  connCheck:null },
-  { id:465759, name:"College Inmail (Friendly)",              status:"IN_PROGRESS", total:62,  inProgress:2,   pending:0,   finished:47,  failed:13, stopped:0,  excluded:0,  connCheck:0   },
-  { id:464154, name:"Name Drop – Friendly (Noah)",            status:"IN_PROGRESS", total:425, inProgress:277, pending:0,   finished:117, failed:3,  stopped:0,  excluded:28, connCheck:109 },
-  { id:464152, name:"Name Drop – Direct (Noah)",              status:"IN_PROGRESS", total:171, inProgress:86,  pending:0,   finished:76,  failed:3,  stopped:0,  excluded:6,  connCheck:0   },
-  { id:460034, name:"Soma Capital – Direct (Joey)",           status:"IN_PROGRESS", total:218, inProgress:6,   pending:0,   finished:175, failed:19, stopped:16, excluded:2,  connCheck:0   },
-  { id:458461, name:"Soma Capital – Direct (Will)",           status:"IN_PROGRESS", total:100, inProgress:20,  pending:0,   finished:68,  failed:11, stopped:1,  excluded:0,  connCheck:0   },
-  { id:453833, name:"Maryland – Direct",                      status:"IN_PROGRESS", total:71,  inProgress:1,   pending:0,   finished:65,  failed:2,  stopped:3,  excluded:0,  connCheck:0   },
-  { id:453831, name:"Maryland – Friendly",                    status:"FINISHED",    total:69,  inProgress:2,   pending:0,   finished:62,  failed:5,  stopped:0,  excluded:0,  connCheck:null },
-  { id:451672, name:"Oliver Wyman – Direct",                  status:"FINISHED",    total:31,  inProgress:0,   pending:0,   finished:30,  failed:1,  stopped:0,  excluded:0,  connCheck:null },
-  { id:451670, name:"Oliver Wyman – Friendly",                status:"FINISHED",    total:33,  inProgress:3,   pending:0,   finished:29,  failed:0,  stopped:1,  excluded:0,  connCheck:null },
-  { id:446357, name:"Cold Targets – Friendly",                status:"FINISHED",    total:18,  inProgress:0,   pending:0,   finished:18,  failed:0,  stopped:0,  excluded:0,  connCheck:null },
-  { id:446354, name:"Cold Targets – Direct",                  status:"FINISHED",    total:18,  inProgress:2,   pending:0,   finished:16,  failed:0,  stopped:0,  excluded:0,  connCheck:null },
-  { id:443407, name:"Name Drop – Direct (Will)",              status:"IN_PROGRESS", total:290, inProgress:93,  pending:0,   finished:152, failed:42, stopped:2,  excluded:1,  connCheck:0   },
-  { id:443405, name:"Name Drop – Friendly (Will)",            status:"IN_PROGRESS", total:461, inProgress:288, pending:0,   finished:156, failed:14, stopped:1,  excluded:2,  connCheck:108 },
-  { id:438319, name:"Vandy – Friendly",                       status:"FINISHED",    total:81,  inProgress:3,   pending:0,   finished:73,  failed:5,  stopped:0,  excluded:0,  connCheck:null },
-  { id:437987, name:"Vandy – Direct",                         status:"FINISHED",    total:80,  inProgress:2,   pending:0,   finished:66,  failed:9,  stopped:1,  excluded:2,  connCheck:null },
-  { id:413440, name:"Marketing Lead Search – New List",       status:"PAUSED",      total:851, inProgress:169, pending:464, finished:45,  failed:63, stopped:0,  excluded:110,connCheck:null },
-  { id:413360, name:"FTMU",                                   status:"DRAFT",       total:0,   inProgress:0,   pending:0,   finished:0,   failed:0,  stopped:0,  excluded:0,  connCheck:null },
-  { id:380391, name:"Risk Search",                            status:"PAUSED",      total:378, inProgress:197, pending:56,  finished:107, failed:18, stopped:0,  excluded:0,  connCheck:null },
-  { id:380383, name:"Product Ops Search",                     status:"FINISHED",    total:281, inProgress:73,  pending:194, finished:9,   failed:5,  stopped:0,  excluded:0,  connCheck:null },
-  { id:380370, name:"AEs Search",                             status:"FINISHED",    total:596, inProgress:6,   pending:561, finished:22,  failed:7,  stopped:0,  excluded:0,  connCheck:null },
-  { id:379301, name:"Marketing Lead Search",                  status:"FINISHED",    total:852, inProgress:129, pending:708, finished:13,  failed:2,  stopped:0,  excluded:0,  connCheck:null },
-  { id:287714, name:"Company Followers",                      status:"FINISHED",    total:4,   inProgress:0,   pending:0,   finished:3,   failed:1,  stopped:0,  excluded:0,  connCheck:null },
-  { id:282549, name:"Fintech Communities",                    status:"FINISHED",    total:58,  inProgress:0,   pending:0,   finished:53,  failed:3,  stopped:2,  excluded:0,  connCheck:null },
-  { id:274719, name:"Boulder",                                status:"FINISHED",    total:18,  inProgress:0,   pending:0,   finished:15,  failed:1,  stopped:2,  excluded:0,  connCheck:null },
-  { id:274423, name:"Boston College",                         status:"FINISHED",    total:30,  inProgress:0,   pending:0,   finished:29,  failed:0,  stopped:1,  excluded:0,  connCheck:null },
-  { id:274422, name:"Competitor Poaching",                    status:"PAUSED",      total:976, inProgress:9,   pending:0,   finished:750, failed:80, stopped:136,excluded:1,  connCheck:null },
-];
+const DATA = [];
 
 const STATUS_ORDER = { IN_PROGRESS:0, PAUSED:1, FINISHED:2, DRAFT:3, CANCELED:4 };
 const BADGE_CLS    = { IN_PROGRESS:'b-run', PAUSED:'b-pause', FINISHED:'b-fin', DRAFT:'b-draft', CANCELED:'b-fail' };
@@ -1036,7 +992,6 @@ renderTable();
 // Calls go to local proxy (/heyreach-api/*) which forwards to HeyReach — avoids CORS.
 const HR_API = '/heyreach-api';
 const DEMO_ID = '__demo__';
-const DEMO_DATA = DATA.map(d => ({...d})); // snapshot of hardcoded data
 
 let workspaces = JSON.parse(localStorage.getItem('hr_workspaces') || '[]');
 let activeWsId  = localStorage.getItem('hr_active_ws') || DEMO_ID;
@@ -1137,8 +1092,7 @@ function switchWorkspace(id) {
 
   if (id === DEMO_ID) {
     DATA.length = 0;
-    DEMO_DATA.forEach(d => DATA.push(d));
-    document.getElementById('syncLabel').textContent = 'Demo · Jul 18, 2026';
+    document.getElementById('syncLabel').textContent = 'No workspace — add one via ⚙';
     document.getElementById('syncStatus').textContent = '';
     document.getElementById('syncStatus').className = 'sync-status';
   } else {
