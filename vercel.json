@@ -1,5 +1,1 @@
-{
-  "rewrites": [
-    { "source": "/heyreach-api/:path*", "destination": "/api/proxy/:path*" }
-  ]
-}
+{}
