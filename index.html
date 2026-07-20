@@ -1070,7 +1070,7 @@ renderTable();
    WORKSPACE / API KEY MANAGEMENT
    ══════════════════════════════════════════════ */
 // Calls go to local proxy (/heyreach-api/*) which forwards to HeyReach — avoids CORS.
-const HR_API = '/heyreach-api';
+const HR_API = '/api';
 const DEMO_ID = '__demo__';
 
 let workspaces = JSON.parse(localStorage.getItem('hr_workspaces') || '[]');
